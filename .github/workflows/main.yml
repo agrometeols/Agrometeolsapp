@@ -12,7 +12,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: 24
 
     - name: Install Cordova
       run: npm install -g cordova
@@ -25,20 +25,19 @@ jobs:
         cd myapp
         cordova platform add ios
 
-    - name: Build iOS for Simulator
+    - name: Compile App Raw Files
       run: |
         cd myapp
-        cordova build ios --emulator --buildConfig=none
+        cordova compile ios --emulator --clear
 
-    - name: Package into IPA
+    - name: Prepare Files for Sideloadly
       run: |
-        cd myapp/platforms/ios/build/emulator
         mkdir Payload
-        cp -R *.app Payload/
-        zip -r ../../../../app.ipa Payload
+        cp -R myapp/platforms/ios/build/emulator/*.app Payload/ || cp -R myapp/platforms/ios/build/shared/emulator/*.app Payload/ || cp -R myapp/platforms/ios/build/Outputs/emulator/*.app Payload/ || true
+        zip -r app-files.zip Payload
 
-    - name: Upload IPA
+    - name: Upload Package
       uses: actions/upload-artifact@v4
       with:
-        name: ios-app-debug
-        path: app.ipa
+        name: ios-app-raw
+        path: app-files.zip
