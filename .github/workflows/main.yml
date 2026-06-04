@@ -20,28 +20,27 @@ jobs:
         npx cap init "My App" "com.mydomain.myapp" --web-dir=www
         npx cap add ios
 
-    - name: Disable Code Signing in Pods
-      run: |
-        echo 'post_install do |installer|' >> ios/App/Podfile
-        echo '  installer.pods_project.targets.each do |target|' >> ios/App/Podfile
-        echo '    target.build_configurations.each do |config|' >> ios/App/Podfile
-        echo '      config.build_settings["CODE_SIGNING_ALLOWED"] = "NO"' >> ios/App/Podfile
-        echo '      config.build_settings["CODE_SIGNING_REQUIRED"] = "NO"' >> ios/App/Podfile
-        echo '    end' >> ios/App/Podfile
-        echo '  end' >> ios/App/Podfile
-        echo 'end' >> ios/App/Podfile
-
     - name: Install CocoaPods
       run: |
         cd ios/App
         pod install
 
-    - name: Build App for Simulator
+    - name: Bypass Apple Restrictions
       run: |
         cd ios/App
-        xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -sdk iphonesimulator CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO
+        sed -i '' 's/DEVELOPMENT_TEAM = "";/DEVELOPMENT_TEAM = "1234567890";/' App.xcodeproj/project.pbxproj
+        sed -i '' 's/CODE_SIGN_STYLE = Automatic;/CODE_SIGN_STYLE = Manual;/' App.xcodeproj/project.pbxproj
+
+    - name: Build App Archive
+      run: |
+        cd ios/App
+        xcodebuild -workspace App.xcworkspace -scheme App -configuration Debug -sdk iphoneos CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" PROVISIONING_PROFILE_SPECIFIER=""
+
+    - name: Package into IPA
+      run: |
+        cd ios/App
         mkdir Payload
-        cp -R Build/Products/Debug-iphonesimulator/App.app Payload/
+        cp -R Build/Products/Debug-iphoneos/App.app Payload/
         zip -r ../../app.ipa Payload
 
     - name: Upload IPA
