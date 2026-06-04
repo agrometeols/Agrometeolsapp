@@ -25,14 +25,14 @@ jobs:
         cd myapp
         cordova platform add ios
 
-    - name: Build iOS Archive
+    - name: Build iOS for Simulator
       run: |
         cd myapp
-        cordova build ios --device --codeSignIdentity="" --developmentTeam="" --packageType="development"
+        cordova build ios --emulator --buildConfig=none
 
     - name: Package into IPA
       run: |
-        cd myapp/platforms/ios/build/device
+        cd myapp/platforms/ios/build/emulator
         mkdir Payload
         cp -R *.app Payload/
         zip -r ../../../../app.ipa Payload
