@@ -17,23 +17,35 @@ jobs:
     - name: Install Cordova
       run: npm install -g cordova
 
-    - name: Create Cordova Project
+    - name: Create and Configure App
       run: |
         cordova create myapp com.mydomain.myapp "My App"
         rm -rf myapp/www/*
         cp -R www/* myapp/www/
-        cd myapp
-        cordova platform add ios
+        
+        # Δημιουργία καθαρού αρχείου config.xml για να μην κρασάρει το build
+        echo '<?xml version="1.0" encoding="utf-8"?>' > myapp/config.xml
+        echo '<widget id="com.mydomain.myapp" version="1.0.0" xmlns="http://w3.org" xmlns:cdv="http://apache.org">' >> myapp/config.xml
+        echo '    <name>My App</name>' >> myapp/config.xml
+        echo '    <description>Web App</description>' >> myapp/config.xml
+        echo '    <content src="index.html" />' >> myapp/config.xml
+        echo '    <preference name="KeepRunning" value="true" />' >> myapp/config.xml
+        echo '</widget>' >> myapp/config.xml
 
-    - name: Compile App Raw Files
+    - name: Setup iOS Platform
       run: |
         cd myapp
-        cordova compile ios --emulator --clear
+        cordova platform add ios --save
 
-    - name: Prepare Files for Sideloadly
+    - name: Build App for Simulator
+      run: |
+        cd myapp
+        cordova build ios --emulator --buildConfig=none
+
+    - name: Package into IPA
       run: |
         mkdir Payload
-        cp -R myapp/platforms/ios/build/emulator/*.app Payload/ || cp -R myapp/platforms/ios/build/shared/emulator/*.app Payload/ || cp -R myapp/platforms/ios/build/Outputs/emulator/*.app Payload/ || true
+        find myapp/platforms/ios/build -name "*.app" -exec cp -R {} Payload/ \;
         zip -r app-files.zip Payload
 
     - name: Upload Package
