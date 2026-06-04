@@ -6,17 +6,25 @@ jobs:
   build:
     runs-on: macos-14
     steps:
-    - name: Download Files Without Node
+    - name: Create Web Files Directly
       run: |
-        # Κατεβάζουμε τα αρχεία σου απευθείας από το GitHub χωρίς το checkout plugin
-        curl -L -o repo.zip https://github.com{{ github.repository }}/archive/refs/heads/main.zip
-        unzip repo.zip
-        cd *-main
+        mkdir -p Payload/App.app
         
-        # Φτιάχνουμε το σωστό πακέτο Payload για το Sideloadly
-        mkdir -p ../Payload/App.app
-        cp -R www/* ../Payload/App.app/
-        cd ..
+        # Δημιουργία του index.html απευθείας στον Cloud Mac
+        echo '<!DOCTYPE html>' > Payload/App.app/index.html
+        echo '<html>' >> Payload/App.app/index.html
+        echo '<head>' >> Payload/App.app/index.html
+        echo '    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">' >> Payload/App.app/index.html
+        echo '    <style>html, body, iframe { margin: 0; padding: 0; width: 100%; height: 100%; border: none; overflow: hidden; background-color: #ffffff; }</style>' >> Payload/App.app/index.html
+        echo '</head>' >> Payload/App.app/index.html
+        echo '<body>' >> Payload/App.app/index.html
+        echo '    <iframe src="https://agrometeols.github.io/agrometeols/"></iframe>' >> Payload/App.app/index.html
+        echo '</body>' >> Payload/App.app/index.html
+        echo '</html>' >> Payload/App.app/index.html
+        
+        # Αντικατάσταση του URL με το δικό σου site
+        sed -i '' 's|https://to-site-sou.com|https://google.com|g' Payload/App.app/index.html
+
         zip -r app-files.ipa Payload
 
     - name: Upload IPA
