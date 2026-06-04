@@ -6,13 +6,17 @@ jobs:
   build:
     runs-on: macos-14
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
-
-    - name: Pack Web Files Directly
+    - name: Download Files Without Node
       run: |
-        mkdir -p Payload/App.app
-        cp -R www/* Payload/App.app/
+        # Κατεβάζουμε τα αρχεία σου απευθείας από το GitHub χωρίς το checkout plugin
+        curl -L -o repo.zip https://github.com{{ github.repository }}/archive/refs/heads/main.zip
+        unzip repo.zip
+        cd *-main
+        
+        # Φτιάχνουμε το σωστό πακέτο Payload για το Sideloadly
+        mkdir -p ../Payload/App.app
+        cp -R www/* ../Payload/App.app/
+        cd ..
         zip -r app-files.ipa Payload
 
     - name: Upload IPA
