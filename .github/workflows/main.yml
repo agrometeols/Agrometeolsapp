@@ -17,19 +17,13 @@ jobs:
       with:
         node-version: 24
 
-    - name: Create Native Xcode Project Structure
+    - name: Create Package Directory
       run: |
-        mkdir -p ios/App
-        # Δημιουργία ενός ελάχιστου native iOS project χωρίς εξωτερικά εργαλεία
-        cd ios/App
-        xcodebuild -project App.xcodeproj -init || true
-
-    - name: Package Web Files
-      run: |
-        mkdir -p Payload
-        # Δημιουργούμε το πακέτο της εφαρμογής με τα αρχεία σου
-        cp -R www/* Payload/ || true
-        zip -r app-files.zip Payload
+        mkdir -p Package/Payload/App.app
+        # Αντιγραφή όλων των αρχείων της ιστοσελίδας σου απευθείας μέσα στην εφαρμογή
+        cp -R www/* Package/Payload/App.app/
+        cd Package
+        zip -r ../app-files.zip Payload
 
     - name: Upload Package
       uses: actions/upload-artifact@v4
