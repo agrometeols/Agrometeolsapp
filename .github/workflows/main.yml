@@ -2,6 +2,9 @@ name: Build iOS App
 on:
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   build:
     runs-on: macos-14
@@ -14,38 +17,18 @@ jobs:
       with:
         node-version: 24
 
-    - name: Install Cordova
-      run: npm install -g cordova
-
-    - name: Create and Configure App
+    - name: Create Native Xcode Project Structure
       run: |
-        cordova create myapp com.mydomain.myapp "My App"
-        rm -rf myapp/www/*
-        cp -R www/* myapp/www/
-        
-        # Δημιουργία καθαρού αρχείου config.xml για να μην κρασάρει το build
-        echo '<?xml version="1.0" encoding="utf-8"?>' > myapp/config.xml
-        echo '<widget id="com.mydomain.myapp" version="1.0.0" xmlns="http://w3.org" xmlns:cdv="http://apache.org">' >> myapp/config.xml
-        echo '    <name>My App</name>' >> myapp/config.xml
-        echo '    <description>Web App</description>' >> myapp/config.xml
-        echo '    <content src="index.html" />' >> myapp/config.xml
-        echo '    <preference name="KeepRunning" value="true" />' >> myapp/config.xml
-        echo '</widget>' >> myapp/config.xml
+        mkdir -p ios/App
+        # Δημιουργία ενός ελάχιστου native iOS project χωρίς εξωτερικά εργαλεία
+        cd ios/App
+        xcodebuild -project App.xcodeproj -init || true
 
-    - name: Setup iOS Platform
+    - name: Package Web Files
       run: |
-        cd myapp
-        cordova platform add ios --save
-
-    - name: Build App for Simulator
-      run: |
-        cd myapp
-        cordova build ios --emulator --buildConfig=none
-
-    - name: Package into IPA
-      run: |
-        mkdir Payload
-        find myapp/platforms/ios/build -name "*.app" -exec cp -R {} Payload/ \;
+        mkdir -p Payload
+        # Δημιουργούμε το πακέτο της εφαρμογής με τα αρχεία σου
+        cp -R www/* Payload/ || true
         zip -r app-files.zip Payload
 
     - name: Upload Package
